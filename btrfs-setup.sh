@@ -2,6 +2,14 @@
 
 # Btrfs Subvolumes Setup for KDE Neon with LUKS (Post-Calamares)
 # Uses mv instead of rsync and simplified directory handling
+# The following disk format will produce the required layout
+# Disk format:
+    # Partition 1: 512MiB /boot/efi
+    # Partition 2: 2GiB /boot
+    # Partition 3: Remaining Space, Encypted BTRFS
+# /tmp on tmpfs and /swap/swapfile on a btrfs subvolume will be
+# setup by Calamares automatically.
+    
 
 set -euo pipefail
 
@@ -152,14 +160,7 @@ create_subvolume() {
 update_fstab() {
     local device=$1
     local fstab="$TARGET/etc/fstab"
-    local swapfile="$TARGET/swap/swapfile"
 
-    # Create a swapfile
-    echo "Creating swapfile..."
-
-    btrfs filesystem mkswapfile --size 2g --uuid clear "$swapfile" \
-        || handle_error "Failed to create $swapfile"
-        
     # Update fstab 
     echo "Updating fstab..."
     
@@ -174,8 +175,6 @@ update_fstab() {
         echo "# Btrfs subvolumes"
         echo "$device /var/log btrfs defaults,subvol=@var_log 0 0"
         echo "$device /var/cache btrfs defaults,subvol=@var_cache 0 0"
-        echo "$device /swap btrfs defaults,subvol=@swap 0 0"
-        echo "/swap/swapfile none swap defaults 0 0"
     } >> "$fstab" || handle_error "Failed to update fstab"
 
     echo "✓ fstab updated"
@@ -209,7 +208,6 @@ setup_btrfs_root "$LUKS_MAPPER_NAME"
 # Create subvolumes
 create_subvolume "/var/log" "@var_log"
 create_subvolume "/var/cache" "@var_cache"
-create_subvolume "/swap" "@swap"
 
 # Update fstab
 update_fstab "$LUKS_MAPPER_NAME"
@@ -218,4 +216,3 @@ echo "=== Btrfs Subvolume Setup Complete ==="
 echo "Successfully created and configured:"
 echo " - @var_log (for /var/log)"
 echo " - @var_cache (for /var/cache)"
-echo " - @swap (for /swap)"
