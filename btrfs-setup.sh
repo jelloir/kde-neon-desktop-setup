@@ -119,8 +119,8 @@ create_subvolume() {
         handle_error "Failed to mount $subvol for data migration"
     fi
 
-    # Move data if directory exists
-    if [ -d "$TARGET$mount_point" ]; then
+    # Move data if directory exists and is not empty
+    if [ -d "$TARGET$mount_point" ] && [ ! -z "$(ls -A "$TARGET$mount_point")"]; then
         echo "Moving data from $TARGET$mount_point to $subvol..."
         if ! mv "$TARGET$mount_point"/* "$TEMP_MOUNT/"; then
             umount "$TEMP_MOUNT"
@@ -148,11 +148,19 @@ create_subvolume() {
     echo "✓ Created and populated $subvol"
 }
 
-# Update fstab with LUKS mapper paths
+# Create swapfile and update fstab with LUKS mapper paths
 update_fstab() {
     local device=$1
     local fstab="$TARGET/etc/fstab"
-    
+    local swapfile="$TARGET/swap/swapfile"
+
+    # Create a swapfile
+    echo "Creating swapfile..."
+
+    btrfs filesystem mkswapfile --size 2g --uuid clear "$swapfile" \
+        || handle_error "Failed to create $swapfile"
+        
+    # Update fstab 
     echo "Updating fstab..."
     
     # Skip if our entries already exist
@@ -166,7 +174,8 @@ update_fstab() {
         echo "# Btrfs subvolumes"
         echo "$device /var/log btrfs defaults,subvol=@var_log 0 0"
         echo "$device /var/cache btrfs defaults,subvol=@var_cache 0 0"
-        echo "$device /.snapshots btrfs defaults,subvol=@snapshots 0 0"
+        echo "$device /swap btrfs defaults,subvol=@swap 0 0"
+        echo "/swap/swapfile none swap defaults 0 0"
     } >> "$fstab" || handle_error "Failed to update fstab"
 
     echo "✓ fstab updated"
@@ -188,8 +197,8 @@ echo "✓ Detected LUKS mapper: $LUKS_MAPPER_NAME"
 mount_target "$LUKS_MAPPER_NAME"
 
 # Mount boot partitions
-mount_from_fstab "/boot" || echo "⚠️  /boot mount skipped (not found in fstab)"
-mount_from_fstab "/boot/efi" || echo "⚠️  /boot/efi mount skipped (not found in fstab)"
+mount_from_fstab "/boot" || echo "⚠  /boot mount skipped (not found in fstab)"
+mount_from_fstab "/boot/efi" || echo "⚠  /boot/efi mount skipped (not found in fstab)"
 
 # Setup chroot environment
 setup_chroot
@@ -200,7 +209,7 @@ setup_btrfs_root "$LUKS_MAPPER_NAME"
 # Create subvolumes
 create_subvolume "/var/log" "@var_log"
 create_subvolume "/var/cache" "@var_cache"
-create_subvolume "/.snapshots" "@snapshots"
+create_subvolume "/swap" "@swap"
 
 # Update fstab
 update_fstab "$LUKS_MAPPER_NAME"
@@ -209,4 +218,4 @@ echo "=== Btrfs Subvolume Setup Complete ==="
 echo "Successfully created and configured:"
 echo " - @var_log (for /var/log)"
 echo " - @var_cache (for /var/cache)"
-echo " - @snapshots (for /.snapshots)"
+echo " - @swap (for /swap)"
