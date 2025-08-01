@@ -26,6 +26,18 @@ sudo apt install fonts-jetbrains-mono fonts-jetbrains-mono-web ttf-mscorefonts-i
 Set UI fonts to Inter 10pt RGB Antialiasing Medium Hinting
 Set Monospace font to jetbrains mono 10pt
 
+Remove:
+
+Kate
+
+Install:
+
+kcalc
+Brave
+Visual Studio Code
+Signal
+Steam
+
 Go to https://catppuccin.com and follow the setup for
 
 Brave (Google Chrome)
