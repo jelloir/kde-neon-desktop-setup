@@ -180,6 +180,23 @@ update_fstab() {
     echo "✓ fstab updated"
 }
 
+# Execute commands inside chroot
+run_chroot_commands() {
+    echo "Running additional setup inside chroot..."
+
+    chroot "$TARGET" /bin/bash -c "echo 'APT::Install-Recommends \"false\";' > /etc/apt/apt.conf.d/00recommends"
+    chroot "$TARGET" apt update
+    chroot "$TARGET" apt install -y systemd-zram-generator
+
+    chroot "$TARGET" /bin/bash -c "cat > /etc/systemd/zram-generator.conf <<EOF
+[zram0]
+zram-size = 2048
+compression-algorithm = zstd
+swap-priority = 100
+EOF"
+    echo "✓ Chroot setup complete"
+}
+
 ### Main Execution ###
 trap cleanup EXIT
 
@@ -211,6 +228,9 @@ create_subvolume "/var/cache" "@var_cache"
 
 # Update fstab
 update_fstab "$LUKS_MAPPER_NAME"
+
+# Run chroot commands
+run_chroot_commands
 
 echo "=== Btrfs Subvolume Setup Complete ==="
 echo "Successfully created and configured:"
