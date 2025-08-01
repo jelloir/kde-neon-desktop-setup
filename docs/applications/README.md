@@ -20,7 +20,8 @@ sudo apt install --no-install-recommends timeshift
 
 Install 99_timeshift_autosnap.conf
 
-sudo apt install fonts-jetbrains-mono fonts-jetbrains-mono-web
+sudo apt install fonts-jetbrains-mono fonts-jetbrains-mono-web ttf-mscorefonts-installer
+
 
 Set UI fonts to Inter 10pt RGB Antialiasing Medium Hinting
 Set Monospace font to jetbrains mono 10pt
