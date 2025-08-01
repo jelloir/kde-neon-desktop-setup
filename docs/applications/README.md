@@ -50,5 +50,6 @@ Optional:
 Grub
 SDDM
 Cursors
+Vim
 
 
