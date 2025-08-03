@@ -34,6 +34,7 @@ Install:
 
 kcalc
 Brave
+Edge
 Visual Studio Code
 Signal
 Steam
@@ -45,11 +46,14 @@ Firefox
 Visual Studio Code Bundle (Icons and Theme)
 Konsole
 KDE
+btop
 Papirus Folders
 Optional:
 Grub
 SDDM
 Cursors
 Vim
+
+Setup required Edge PWA's for Office and AI apps.
 
 
