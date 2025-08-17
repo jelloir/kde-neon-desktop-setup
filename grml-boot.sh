@@ -38,7 +38,6 @@ download_iso() {
 # Label the boot partition
 label_boot_partition() {
     local boot_dev=$(findmnt -n -o SOURCE --target /boot)
-
     if [ -z "$boot_dev" ]; then
         echo "WARNING: /boot is not a separate mount point. Skipping labeling."
         return 0
